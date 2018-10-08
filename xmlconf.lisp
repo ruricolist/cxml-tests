@@ -109,7 +109,8 @@
          (ntried 0)
          (nfailed 0)
          (nskipped 0)
-         (lines '()))
+         (lines '())
+         (failures '()))
     (dom:map-node-list
      (lambda (test)
        (let ((description
@@ -125,23 +126,29 @@
              (class (test-class test)))
          (cond
            (class
-            (push
-             (with-output-to-string (*standard-output*)
-               (incf ntried)
-               (multiple-value-bind (pathname output)
-                   (test-pathnames directory test)
-                 (princ (enough-namestring pathname directory))
-                 (unless (probe-file pathname)
-                   (error "file not found: ~A" pathname))
-                 (with-simple-restart (skip-test "Skip this test")
-                   (unless (run-test class pathname output description)
-                     (incf nfailed)))))
-             lines))
+            (let ((failed-count nfailed)
+                  (string
+                    (with-output-to-string (*standard-output*)
+                      (incf ntried)
+                      (multiple-value-bind (pathname output)
+                          (test-pathnames directory test)
+                        (princ (enough-namestring pathname directory))
+                        (unless (probe-file pathname)
+                          (error "file not found: ~A" pathname))
+                        (with-simple-restart (skip-test "Skip this test")
+                          (unless (run-test class pathname output description)
+                            (incf nfailed)))))))
+              (push string lines)
+              (unless (= failed-count nfailed)
+                (push string failures))))
            (t
             (incf nskipped)))))
      (dom:get-elements-by-tag-name xmlconf "TEST"))
-    (format t "~&~D/~D tests failed; ~D test~:P were skipped"
+    (format t "~&~D/~D tests failed; ~D test~:P were skipped."
             nfailed ntried nskipped)
+    (when failures
+      (dolist (f failures)
+        (format t "~&~a" f)))
     (values lines nfailed ntried nskipped)))
 
 (defmethod run-test :around (class pathname output description &rest args)
