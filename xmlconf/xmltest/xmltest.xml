@@ -1247,6 +1247,10 @@ right one, with very odd content "some data ? > &lt;?". </TEST>
 	OUTPUT="valid/sa/out/119.xml">
     Comments may contain any legal XML characters;
     only the string "--" is disallowed.</TEST>
+<TEST TYPE="valid" ENTITIES="none" ID="valid-sa-120"
+	URI="valid/sa/120.xml" SECTIONS="2.5"
+	OUTPUT="valid/sa/out/120.xml">
+    Left recursive.</TEST>
 
 
 <!-- Start:  valid/not-sa -->
